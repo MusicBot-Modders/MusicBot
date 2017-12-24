@@ -60,7 +60,8 @@ class MusicBot(discord.Client):
         self.last_status = None
 
         self.config = Config(config_file)
-        self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
+        self.permissions = []
+        # self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
 
         self.blacklist = set(load_file(self.config.blacklist_file))
         self.autoplaylist = load_file(self.config.auto_playlist_file)
@@ -838,7 +839,7 @@ class MusicBot(discord.Client):
         await self.config.async_validate(self)
 
         log.debug("Validating permissions config")
-        await self.permissions.async_validate(self)
+        # await self.permissions.async_validate(self)
 
 #######################################################################################################################
 
@@ -1121,6 +1122,10 @@ class MusicBot(discord.Client):
         # wait_for_message is pretty neato
 
         await self._join_startup_channels(autojoin_channels, autosummon=self.config.auto_summon)
+
+        for x in self.servers:
+            perms_file = "config/{}/permissions.ini".format(x.id)
+            self.permissions.append(Permissions(perms_file, grant_all=[self.config.owner_id], server_id=x.id))
 
         # t-t-th-th-that's all folks!
 
@@ -2380,7 +2385,10 @@ class MusicBot(discord.Client):
         else:
             log.info("{0.id}/{0!s}: {1}".format(message.author, message_content.replace('\n', '\n... ')))
 
-        user_permissions = self.permissions.for_user(message.author)
+        for x in self.permissions:
+            if x.server_id == message.server.id:
+                user_permissions = x.for_user(message.author)
+        # user_permissions = self.permissions.for_user(message.author)
 
         argspec = inspect.signature(handler)
         params = argspec.parameters.copy()

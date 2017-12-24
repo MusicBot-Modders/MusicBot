@@ -2,6 +2,7 @@ import shutil
 import logging
 import traceback
 import configparser
+import os
 
 import discord
 
@@ -9,7 +10,16 @@ log = logging.getLogger(__name__)
 
 
 class PermissionsDefaults:
-    perms_file = 'config/permissions.ini'
+    list_of_ids = []
+    with open("data/server_names.txt") as open_file:
+        for line in open_file:
+            current_id = line.split()[0]
+            list_of_ids.append(current_id)
+            # print(current_id)
+
+    for server_id in list_of_ids:
+        perms_file = "config/{}/permissions.ini".format(server_id)
+    # perms_file = 'config/permissions.ini'
 
     CommandWhiteList = set()
     CommandBlackList = set()
@@ -34,6 +44,9 @@ class Permissions:
             log.info("Permissions file not found, copying example_permissions.ini")
 
             try:
+                newpath = r'config/{}' .format(server_id)
+                if not os.path.exists(newpath):
+                    os.makedirs("config/{}".format(server_id))
                 shutil.copy('config/example_permissions.ini', config_file)
                 self.config.read(config_file, encoding='utf-8')
 

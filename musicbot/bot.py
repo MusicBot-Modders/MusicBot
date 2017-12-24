@@ -1473,14 +1473,17 @@ class MusicBot(discord.Client):
         Adds to {command_prefix}queue
         """
         filename = filename
+        location = "playlists/"
+        self.autoplaylist_session = []
+
         if filename.endswith('.txt'):
             playlistfile = filename
         else:
             playlistfile = filename + '.txt'
 
         try:
-            savefile = load_file(playlistfile)
-            textfile = load_file(playlistfile)
+            savefile = load_file(location + playlistfile)
+            textfile = load_file(location + playlistfile)
         except Exception as e:
             return Response(e)
 
@@ -1500,13 +1503,15 @@ class MusicBot(discord.Client):
             if 'entries' in info:
                 try:
                     print('Playlist detected in `{}`. Attempting to retrieve songs...'.format(playlistfile))
-                    entry_list, position = await player.playlist.import_from(song_url)
+                    # entry_list, position = await player.playlist.import_from(song_url)
+                    self.autoplaylist_session = await player.playlist.import_from(song_url)
                 except exceptions.ExtractionError as e:
                     print("Error adding song(s) from `%s` in %s:" % song_url, playlistfile, e)
                     continue
             else:
                 try:
-                    await player.playlist.add_entry(song_url, channel=None, author=None)
+                    # await player.playlist.add_entry(song_url, channel=None, author=None)
+                    self.autoplaylist_session.insert(0, song_url)
                     print("Added `%s` to the queue!" % song_url)
                 except exceptions.ExtractionError as e:
                     print("Error adding song (`%s`) from %s:" % song_url, playlistfile, e)
@@ -1516,7 +1521,7 @@ class MusicBot(discord.Client):
         for s in unplayable_songs:
             try:
                 savefile.remove(s)
-                write_file(playlistfile, savefile)
+                write_file(location + playlistfile, savefile)
             except Exception as e:
                 await self.safe_send_message(message.channel, e)
 

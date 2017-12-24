@@ -32,6 +32,7 @@ def write_file(filename, contents):
             f.write(str(item))
             f.write('\n')
 
+
 def paginate(content, *, length=DISCORD_MSG_CHAR_LIMIT, reserve=0):
     """
     Split up a large string or list of strings into chunks for sending to discord.
@@ -87,7 +88,8 @@ def ftimedelta(td):
 
 def safe_print(content, *, end='\n', flush=True):
     sys.stdout.buffer.write((content + end).encode('utf-8', 'replace'))
-    if flush: sys.stdout.flush()
+    if flush:
+        sys.stdout.flush()
 
 
 def avg(i):
@@ -146,8 +148,10 @@ def objdiff(obj1, obj2, *, access_attr=None, depth=0):
 
     return changes
 
-def color_supported():
+
+def colorsupported():
     return hasattr(sys.stderr, "isatty") and sys.stderr.isatty()
+
 
 def _func_():
     # emulate __func__ from C++

@@ -1932,7 +1932,7 @@ class MusicBot(discord.Client):
                 delete_after=20
             )
 
-    async def cmd_volume(self, message, player, new_volume=None):
+    async def cmd_volume(self, message, player, permissions, new_volume=None):
         """
         Usage:
             {command_prefix}volume (+/-)[volume]
@@ -1943,6 +1943,11 @@ class MusicBot(discord.Client):
 
         if not new_volume:
             return Response('Current volume: `%s%%`' % int(player.volume * 100), reply=True, delete_after=20)
+
+        if permissions.max_volume and int(new_volume) > permissions.max_volume:
+            raise exceptions.PermissionsError(
+                "You are not able to set the volume above ({})".format(permissions.max_volume)
+            )
 
         relative = False
         if new_volume[0] in '+-':

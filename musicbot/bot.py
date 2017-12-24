@@ -1504,17 +1504,17 @@ class MusicBot(discord.Client):
                 try:
                     print('Playlist detected in `{}`. Attempting to retrieve songs...'.format(playlistfile))
                     # entry_list, position = await player.playlist.import_from(song_url)
-                    self.autoplaylist_session = await player.playlist.import_from(song_url)
+                    self.autoplaylist_session.insert(0, player.playlist.import_from(song_url))
                 except exceptions.ExtractionError as e:
-                    print("Error adding song(s) from `%s` in %s:" % song_url, playlistfile, e)
+                    print("Error adding song(s) from `{}` in {}".format(song_url, playlistfile, e))
                     continue
             else:
                 try:
                     # await player.playlist.add_entry(song_url, channel=None, author=None)
                     self.autoplaylist_session.insert(0, song_url)
-                    print("Added `%s` to the queue!" % song_url)
+                    print("Added {} to the queue!".format(song_url))
                 except exceptions.ExtractionError as e:
-                    print("Error adding song (`%s`) from %s:" % song_url, playlistfile, e)
+                    print("Error adding song ({}) from {}" .format(song_url, playlistfile, e))
                     continue
             textfile.remove(song_url)
 
@@ -1525,7 +1525,7 @@ class MusicBot(discord.Client):
             except Exception as e:
                 await self.safe_send_message(message.channel, e)
 
-        return Response('Songs from `%s` were added to the queue!' % playlistfile)
+        return Response("Songs from '{}' were added to the queue!".format(playlistfile))
 
     async def _cmd_play_playlist_async(self, player, channel, author, permissions, playlist_url, extractor_type):
         """

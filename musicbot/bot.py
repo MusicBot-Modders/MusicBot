@@ -1504,7 +1504,7 @@ class MusicBot(discord.Client):
                 try:
                     print('Playlist detected in `{}`. Attempting to retrieve songs...'.format(playlistfile))
                     # entry_list, position = await player.playlist.import_from(song_url)
-                    self.autoplaylist_session.insert(0, player.playlist.import_from(song_url))
+                    self.autoplaylist_session.insert(0, await player.playlist.import_from(song_url))
                 except exceptions.ExtractionError as e:
                     print("Error adding song(s) from `{}` in {}".format(song_url, playlistfile, e))
                     continue

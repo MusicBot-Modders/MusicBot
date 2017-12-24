@@ -1166,6 +1166,26 @@ class MusicBot(discord.Client):
 
             return Response(helpmsg, reply=True, delete_after=60)
 
+    async def cmd_permissions(self, channel, message, server, args=None):
+        """
+        Usage:
+            {command_prefix}permissions
+
+        [Uploads the server permissions file - server/bot owner ONLY]
+        """
+        if not message.author.id == server.owner_id or message.author.id == self.config.owner_id:
+            await self.safe_send_message(channel, "Only the server owner and bot owner can use this comand!")
+            return
+        else:
+            if not args:
+                await self.safe_send_message(channel, "Here's the permissions file for {}-{}".format(server.id, server.name))
+                await self.send_file(channel, 'config/{}/permissions.ini'.format(server.id), filename='{}-permissions.ini'.format(server.id))
+                return
+            else:
+                server_name = self.get_server(args)
+                await self.safe_send_message(channel, "Here's the permissions file for {}-{}".format(args, server_name))
+                await self.send_file(channel, 'config/{}/permissions.ini'.format(args), filename='{}-permissions.ini'.format(args))
+
     async def cmd_blacklist(self, message, user_mentions, option, something):
         """
         Usage:

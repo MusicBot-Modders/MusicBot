@@ -1464,17 +1464,16 @@ class MusicBot(discord.Client):
 
         return Response(reply_text, delete_after=30)
 
-    async def cmd_playlist(self, message, player, filename):
+    async def cmd_playlist(self, message, player, channel, filename):
         """
         Usage:
             {command_prefix}playlist <file name>
 
-        Plays a specified playlist .txt file.
-        Adds to {command_prefix}queue
+        Auto play a custom playlist when nothing is in the {command_prefix}queue
         """
         filename = filename
         location = "playlists/"
-        self.autoplaylist_session = []
+        self.song_Count = 0
 
         if filename.endswith('.txt'):
             playlistfile = filename
@@ -1489,43 +1488,62 @@ class MusicBot(discord.Client):
 
         await self.safe_send_message(message.channel, 'Adding songs from `{}` to the queue!'.format(playlistfile))
         unplayable_songs = []
+        self.autoplaylist_session = []
 
         while textfile:
             song_url = random.choice(textfile)
             try:
                 info = await self.downloader.extract_info(player.playlist.loop, song_url, download=False, process=False)
             except Exception as e:
-                raise exceptions.CommandError(e, expire_in=30)
+                # Remove unplayable songs before attempting to add
+                await self.safe_send_message(channel, "**REMOVED** {} from `{}` due to being unplayable".format(song_url, playlistfile))
+                savefile.remove(song_url)
+                write_file(location + playlistfile, savefile)
+                continue
+                # raise exceptions.CommandError(e, expire_in=30)
             if not info:
-                unplayable_songs.append(song_url)
                 self.safe_print("[Info] Removing unplayable song from `{}`: {}".format(playlistfile, song_url))
                 continue
             if 'entries' in info:
                 try:
+                    # ========== **WORKING** ==========
                     print('Playlist detected in `{}`. Attempting to retrieve songs...'.format(playlistfile))
+                    # ========== **END WORKING** ==========
+
+                    # TODO
+                    # Fix playlist?list= support
+
                     # entry_list, position = await player.playlist.import_from(song_url)
-                    self.autoplaylist_session.insert(0, await player.playlist.import_from(song_url))
+                    # info = await self.downloader.extract_info(song_url)
+                    # for song in info['entries']:
+                    #    self.autoplaylist_session.insert(0, song)
+
+                    # ========== **WORKING** ==========
+                    self.song_Count = self.song_Count + 1
+                    print("Added {} to the queue!".format(song_url))
                 except exceptions.ExtractionError as e:
                     print("Error adding song(s) from `{}` in {}".format(song_url, playlistfile, e))
                     continue
+                    # ========== **END WORKING** ==========
             else:
                 try:
                     # await player.playlist.add_entry(song_url, channel=None, author=None)
                     self.autoplaylist_session.insert(0, song_url)
+                    self.song_Count = self.song_Count + 1
                     print("Added {} to the queue!".format(song_url))
                 except exceptions.ExtractionError as e:
                     print("Error adding song ({}) from {}" .format(song_url, playlistfile, e))
                     continue
             textfile.remove(song_url)
 
-        for s in unplayable_songs:
-            try:
-                savefile.remove(s)
-                write_file(location + playlistfile, savefile)
-            except Exception as e:
-                await self.safe_send_message(message.channel, e)
+        # for s in unplayable_songs:
+        #    try:
+        #        savefile.remove(s)
+        #        write_file(location + playlistfile, savefile)
+        #    except Exception as e:
+        #        await self.safe_send_message(message.channel, e)
 
-        return Response("Songs from '{}' were added to the queue!".format(playlistfile))
+        return Response("Added **{}** songs from `{}` to AutoPlaylist_Session".format(self.song_Count, playlistfile))
 
     async def _cmd_play_playlist_async(self, player, channel, author, permissions, playlist_url, extractor_type):
         """

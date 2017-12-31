@@ -237,6 +237,8 @@ class Config:
 
 class ConfigDefaults:
     owner_id = None
+
+    token = None
     dev_ids = set()
 
     command_prefix = '!'

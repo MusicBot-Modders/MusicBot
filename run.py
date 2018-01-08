@@ -25,7 +25,8 @@ FILL_CHAR = '─'
 parser = argparse.ArgumentParser(description='The original MusicBot for Discord.')
 parser.add_argument('--start', help='non-interactively starts the bot', action='store_true')
 parser.add_argument('--update', help='updates the bot and dependencies', action='store_true')
-parser.add_argument('--skip-checks', help='skips the bot\'s initial checks', action='store_true')
+parser.add_argument('--skip-checks', help='skips the bot\'s environment checks', action='store_true')
+parser.add_argument('--skip-update', help='ignores updates (not recommended)', action='store_true')
 app_args = parser.parse_args()
 
 # Logging
@@ -160,6 +161,7 @@ def restart(pycom=None, quick=False, *args):
     # Python 2 compatibility bullshit
     args = [pycom] + list(args) + list(sys.argv)
     if quick:
+        args.append('--skip-update')
         args.append('--start')
     # Buggy on Windows: https://bugs.python.org/issue19124
     os.execv(pycom, args)
@@ -246,14 +248,33 @@ def check_env():
 def check_version():
     log.debug('Doing Git version checks...')
     try:
-        run_sp('git fetch')
-        res = run_sp('git status')
-    except FileNotFoundError:
-        log.warning('Skipping version checks. Can\'t seem to use Git on this shell.')
+        import git
+    except ImportError:
+        update_deps()
+        import git
+
+    try:
+        repo = git.Repo(os.getcwd())
+        assert not repo.is_dirty(), 'local changes have been made'
+        assert not repo.bare, 'repository is bare'
+        remote = repo.remote(name='origin')
+        remote.fetch()
+    except git.exc.GitCommandNotFound:
+        log.error('Git does not seem to be found on your system (e.g in your PATH).')
+        return
+    except git.exc.InvalidGitRepositoryError:  # shouldn't happen, we already checked for .git
+        log.error('The folder is not a valid Git repository. Aborting.')
+        terminate()
+    except AssertionError as e:
+        log.error('Can\'t check for bot updates: {0}.'.format(e))
+        return
+    except ValueError:
+        log.error('Could not find a Git remote linked to this repo.')
         return
 
-    out = res.stdout.lower()
-    if 'your branch is behind' in out:
+    behind = list(repo.iter_commits('{0}..origin/{0}'.format(repo.active_branch.name)))
+    if behind:
+        log.warning('Your repo is behind by {0} commits.'.format(len(behind)))
         while True:
             print()
             print(' An update is available '.center(50, FILL_CHAR))
@@ -263,14 +284,15 @@ def check_version():
             print()
             r = uinput('Update now? [y/n] ')
             if r == 'y':
-                update_bot()
-                update_deps()
-                restart()
-                return
+                try:
+                    remote.pull()
+                    return True
+                except git.exc.GitCommandError as e:
+                    log.error('Could not update the bot: {0}'.format(e))
             elif r == 'n':
                 return
-    elif 'your branch is ahead' in out:
-        log.warning('You have commits that are ahead of the remote.')
+    else:
+        log.info('Bot is up to date. [{0.summary} (by {0.author.name})]'.format(repo.head.commit))
 
 def open_browser(url):
     if not sys.platform.startswith('linux'):  # I'd rather not run a non-GUI browser lol
@@ -282,23 +304,18 @@ def open_browser(url):
 
 def update_deps():
     log.info('Updating dependencies...')
-    run_sp([sys.executable, '-m', 'pip', 'install', '-U', 'pip'], shell=False)
-    res = run_sp([sys.executable, '-m', 'pip', 'install', '-U', '-r', 'requirements.txt'], shell=False)
+    try:
+        run_sp([sys.executable, '-m', 'pip', 'install', '-U', 'pip'], shell=False)
+        res = run_sp([sys.executable, '-m', 'pip', 'install', '-U', '-r', 'requirements.txt'], shell=False)
+    except subprocess.CalledProcessError:
+        log.error('Could not install a dependency. You may need to run this as an admin/sudo.')
+        return
     out = res.stdout.lower()
     if 'failed with' in out:
         print(res.stdout)
         log.error('Could not install a dependency. You may need to run this as an admin/sudo.')
         return
     log.info('Updated dependencies.')
-
-def update_bot():
-    log.info('Updating bot...')
-    try:
-        run_sp('git pull')
-    except subprocess.CalledProcessError:
-        log.error('Could not update bot.')
-        terminate()
-    log.info('Updated bot successfully.')
 
 def ensure_folders():
     pathlib.Path('logs').mkdir(exist_ok=True)
@@ -312,12 +329,16 @@ def main():
 
     ensure_folders()
     finalize_logging()
-    check_version()
+
+    if not app_args.skip_update:
+        up = check_version()
+        if up is True:
+            restart()
 
     if app_args.start:
         start_bot()
     elif app_args.update:
-        update_bot()
+        check_version()
         update_deps()
     else:
         try:
@@ -337,7 +358,7 @@ def main():
             if r == '1':
                 start_bot()
             elif r == '2':
-                update_bot()
+                check_version()
                 update_deps()
                 restart()
             elif r == '3':

@@ -46,6 +46,12 @@ class FFmpegError(MusicbotException):
 class FFmpegWarning(MusicbotException):
     pass
 
+<<<<<<< HEAD
+=======
+# Some issue retrieving something from Spotify's API
+class SpotifyError(MusicbotException):
+    pass
+>>>>>>> 2f94180b40b09ab6851182663fa013170a2a4d92
 
 # The user doesn't have permission to use a command
 class PermissionsError(CommandError):

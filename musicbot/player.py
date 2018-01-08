@@ -38,7 +38,7 @@ class PatchedBuff:
 
     def __del__(self):
         if self.draw:
-            print(' ' * (get_terminal_size().columns - 1), end='\r')
+            print(' ' * (get_terminal_size().columns-1), end='\r')
 
     def read(self, frame_size):
         self.frame_count += 1
@@ -369,6 +369,7 @@ class MusicPlayer(EventEmitter, Serializable):
         except:
             log.exception("Failed to deserialize player")
 
+
     @property
     def current_entry(self):
         return self._current_entry
@@ -400,8 +401,7 @@ class MusicPlayer(EventEmitter, Serializable):
 
 # TODO: I need to add a check for if the eventloop is closed
 
-
-def filter_stderr(popen: subprocess.Popen, future: asyncio.Future):
+def filter_stderr(popen:subprocess.Popen, future:asyncio.Future):
     last_ex = None
 
     while True:
@@ -418,7 +418,7 @@ def filter_stderr(popen: subprocess.Popen, future: asyncio.Future):
                 last_ex = e
 
             except FFmpegWarning:
-                pass  # useless message
+                pass # useless message
         else:
             break
 
@@ -427,13 +427,12 @@ def filter_stderr(popen: subprocess.Popen, future: asyncio.Future):
     else:
         future.set_result(True)
 
-
-def check_stderr(data: bytes):
+def check_stderr(data:bytes):
     try:
         data = data.decode('utf8')
     except:
         log.ffmpeg("Unknown error decoding message from ffmpeg", exc_info=True)
-        return True  # fuck it
+        return True # fuck it
 
     # log.ffmpeg("Decoded data from ffmpeg: {}".format(data))
 
@@ -448,7 +447,7 @@ def check_stderr(data: bytes):
         "decode_band_types: Input buffer exhausted before END element found"
     ]
     errors = [
-        "Invalid data found when processing input",  # need to regex this properly, its both a warning and an error
+        "Invalid data found when processing input", # need to regex this properly, its both a warning and an error
     ]
 
     if any(msg in data for msg in warnings):

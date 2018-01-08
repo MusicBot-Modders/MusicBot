@@ -86,7 +86,7 @@ class Playlist(EventEmitter, Serializable):
 
                 elif content_type.startswith('text/html'):
                     log.warning("Got text/html for content-type, this might be a stream. Attempting to stream.")
-                    return await self.add_stream_entry(song_url, info=info, **meta)  # TODO: Check for shoutcast/icecast
+                    return await self.add_stream_entry(song_url, info=info, **meta) # TODO: Check for shoutcast/icecast
 
                 elif not content_type.startswith(('audio/', 'video/')):
                     log.warning("Questionable content-type \"{}\" for url {}".format(content_type, song_url))
@@ -145,7 +145,7 @@ class Playlist(EventEmitter, Serializable):
             self,
             song_url,
             title,
-            destination=dest_url,
+            destination = dest_url,
             **meta
         )
         self._add_entry(entry)
@@ -339,6 +339,7 @@ class Playlist(EventEmitter, Serializable):
     def count_for_user(self, user):
         return sum(1 for e in self.entries if e.meta.get('author', None) == user)
 
+
     def __json__(self):
         return self._enclose_json({
             'entries': list(self.entries)
@@ -355,3 +356,4 @@ class Playlist(EventEmitter, Serializable):
 
         # TODO: create a function to init downloading (since we don't do it here)?
         return pl
+

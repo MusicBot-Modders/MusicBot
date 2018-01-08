@@ -45,7 +45,7 @@ class Config:
 
         self.command_prefix = config.get('Chat', 'CommandPrefix', fallback=ConfigDefaults.command_prefix)
         self.bound_channels = config.get('Chat', 'BindToChannels', fallback=ConfigDefaults.bound_channels)
-        self.autojoin_channels = config.get('Chat', 'AutojoinChannels', fallback=ConfigDefaults.autojoin_channels)
+        self.autojoin_channels =  config.get('Chat', 'AutojoinChannels', fallback=ConfigDefaults.autojoin_channels)
 
         self.default_volume = config.getfloat('MusicBot', 'DefaultVolume', fallback=ConfigDefaults.default_volume)
         self.skips_required = config.getint('MusicBot', 'SkipsRequired', fallback=ConfigDefaults.skips_required)
@@ -56,7 +56,7 @@ class Config:
         self.auto_playlist = config.getboolean('MusicBot', 'UseAutoPlaylist', fallback=ConfigDefaults.auto_playlist)
         self.auto_playlist_random = config.getboolean('MusicBot', 'AutoPlaylistRandom', fallback=ConfigDefaults.auto_playlist_random)
         self.auto_pause = config.getboolean('MusicBot', 'AutoPause', fallback=ConfigDefaults.auto_pause)
-        self.delete_messages = config.getboolean('MusicBot', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
+        self.delete_messages  = config.getboolean('MusicBot', 'DeleteMessages', fallback=ConfigDefaults.delete_messages)
         self.delete_invoking = config.getboolean('MusicBot', 'DeleteInvoking', fallback=ConfigDefaults.delete_invoking)
         self.persistent_queue = config.getboolean('MusicBot', 'PersistentQueue', fallback=ConfigDefaults.persistent_queue)
         self.status_message = config.get('MusicBot', 'StatusMessage', fallback=ConfigDefaults.status_message)
@@ -74,10 +74,12 @@ class Config:
 
         self.find_autoplaylist()
 
+
     def run_checks(self):
         """
         Validation logic for bot settings.
         """
+
         if not self._login_token:
             raise HelpfulError(
                 "No bot token was specified in the config.",
@@ -104,7 +106,7 @@ class Config:
                     )
 
             elif self.owner_id == 'auto':
-                pass  # defer to async check
+                pass # defer to async check
 
             else:
                 self.owner_id = None
@@ -153,8 +155,6 @@ class Config:
 
         self.debug_mode = self.debug_level <= logging.DEBUG
 
-<<<<<<< HEAD
-=======
         self.create_empty_file_ifnoexist('config/blacklist.txt')
         self.create_empty_file_ifnoexist('config/whitelist.txt')
 
@@ -163,7 +163,6 @@ class Config:
             open(path, 'a').close()
             log.warning('Creating %s' % path)
 
->>>>>>> 2f94180b40b09ab6851182663fa013170a2a4d92
     # TODO: Add save function for future editing of options with commands
     #       Maybe add warnings about fields missing from the config file
 
@@ -197,6 +196,7 @@ class Config:
                 preface=self._confpreface2
             )
 
+
     def find_config(self):
         config = configparser.ConfigParser(interpolation=None)
 
@@ -224,12 +224,12 @@ class Config:
                 # load the config again and check to see if the user edited that one
                 c.read(self.config_file, encoding='utf-8')
 
-                if not int(c.get('Permissions', 'OwnerID', fallback=0)):  # jake pls no flame
+                if not int(c.get('Permissions', 'OwnerID', fallback=0)): # jake pls no flame
                     print(flush=True)
                     log.critical("Please configure config/options.ini and re-run the bot.")
                     sys.exit(1)
 
-            except ValueError:  # Config id value was changed but its not valid
+            except ValueError: # Config id value was changed but its not valid
                 raise HelpfulError(
                     'Invalid value "{}" for OwnerID, config cannot be loaded. '.format(
                         c.get('Permissions', 'OwnerID', fallback=None)
@@ -249,6 +249,7 @@ class Config:
                 log.debug("Copying _autoplaylist.txt to autoplaylist.txt")
             else:
                 log.warning("No autoplaylist file found.")
+
 
     def write_default_config(self, location):
         pass
@@ -286,21 +287,15 @@ class ConfigDefaults:
     options_file = 'config/options.ini'
     blacklist_file = 'config/blacklist.txt'
     auto_playlist_file = 'config/autoplaylist.txt'  # this will change when I add playlists
-<<<<<<< HEAD
-
-=======
->>>>>>> 2f94180b40b09ab6851182663fa013170a2a4d92
 
 setattr(ConfigDefaults, codecs.decode(b'ZW1haWw=', '\x62\x61\x73\x65\x36\x34').decode('ascii'), None)
 setattr(ConfigDefaults, codecs.decode(b'cGFzc3dvcmQ=', '\x62\x61\x73\x65\x36\x34').decode('ascii'), None)
 setattr(ConfigDefaults, codecs.decode(b'dG9rZW4=', '\x62\x61\x73\x65\x36\x34').decode('ascii'), None)
 
-
 # These two are going to be wrappers for the id lists, with add/remove/load/save functions
 # and id/object conversion so types aren't an issue
 class Blacklist:
     pass
-
 
 class Whitelist:
     pass

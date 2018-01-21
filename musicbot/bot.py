@@ -1479,7 +1479,6 @@ class MusicBot(discord.Client):
             playlistfile = filename
         else:
             playlistfile = filename + '.txt'
-
         try:
             savefile = load_file(location + playlistfile)
             textfile = load_file(location + playlistfile)
@@ -1491,7 +1490,7 @@ class MusicBot(discord.Client):
         self.autoplaylist_session = []
 
         while textfile:
-            # NEED TO CLOSE THIS INFINAT loop
+            # NEED TO CLOSE THIS loop
             # as it' trying to process after it's all stored into a
             # vaible and doesn't account for removed songs from playlist file
             song_url = random.choice(textfile)
@@ -1503,7 +1502,7 @@ class MusicBot(discord.Client):
                 savefile.remove(song_url)
                 write_file(location + playlistfile, savefile)
                 continue
-                # raise exceptions.CommandError(e, expire_in=30)
+
             if not info:
                 self.safe_print("[Info] Removing unplayable song from `{}`: {}".format(playlistfile, song_url))
                 savefile.remove(song_url)
@@ -1513,6 +1512,7 @@ class MusicBot(discord.Client):
                 try:
                     # ========== **WORKING** ==========
                     print('Playlist detected in `{}`. Attempting to retrieve songs...'.format(playlistfile))
+                    pass
                     # ========== **END WORKING** ==========
 
                     # TODO
@@ -1526,36 +1526,38 @@ class MusicBot(discord.Client):
                         raise exceptions.CommandError("Could not extract info from input url, no data.", expire_in=25)
 
                     if not info.get('entries', None):
-                        # TODO: Retarded playlist checking
-                        # set(url, webpageurl).difference(set(url))
-
                         if info.get('url', None) != info.get('webpage_url', info.get('url', None)):
                             raise exceptions.CommandError("This does not seem to be a playlist.", expire_in=25)
                         else:
-                            return await self.cmd_pldump(channel, info.get(''))
+                            return await self.cmd_playlist(channel, info.get(''))
 
-                        linegens = defaultdict(lambda: None, **{
-                            "youtube": lambda d: 'https://www.youtube.com/watch?v=%s' % d['id'],
-                            "soundcloud": lambda d: d['url'],
-                            "bandcamp": lambda d: d['url']
-                        })
+                    linegens = defaultdict(lambda: None, **{
+                        "youtube": lambda d: 'https://www.youtube.com/watch?v=%s' % d['id'],
+                        "soundcloud": lambda d: d['url'],
+                        "bandcamp": lambda d: d['url']
+                    })
 
-                        exfunc = linegens[info['extractor'].split(':')[0]]
+                    exfunc = linegens[info['extractor'].split(':')[0]]
 
-                        if not exfunc:
-                            raise exceptions.CommandError("Could not extract info from input url, unsupported playlist type.", expire_in=25)
+                    if not exfunc:
+                        raise exceptions.CommandError("Could not extract info from input url, unsupported playlist type.", expire_in=25)
 
-                        with BytesIO() as fcontent:
-                            for item in info['entries']:
-                                self.autoplaylist_session.insert(0, item)
+                    with BytesIO() as fcontent:
+                        for item in info['entries']:
+                            self.autoplaylist_session.insert(0, exfunc(item))
+                            print("Item added! {}".format(exfunc(item)))
+                            self.song_Count = self.song_Count + 1
+
+                        return Response("Added **{}** songs from `{}` to AutoPlaylist_Session".format(self.song_Count, playlistfile))
 
                     # ========== **WORKING** ==========
                     self.song_Count = self.song_Count + 1
-                    print("Added {} to the queue!".format(song_url))
+                    print("Added {}".format(song_url))
                 except exceptions.ExtractionError as e:
                     print("Error adding song(s) from `{}` in {}".format(song_url, playlistfile, e))
                     continue
                     # ========== **END WORKING** ==========
+
             else:
                 try:
                     # await player.playlist.add_entry(song_url, channel=None, author=None)
@@ -1565,13 +1567,6 @@ class MusicBot(discord.Client):
                 except exceptions.ExtractionError as e:
                     print("Error adding song ({}) from {}" .format(song_url, playlistfile, e))
                     continue
-
-        # for s in unplayable_songs:
-        #    try:
-        #        savefile.remove(s)
-        #        write_file(location + playlistfile, savefile)
-        #    except Exception as e:
-        #        await self.safe_send_message(message.channel, e)
 
         return Response("Added **{}** songs from `{}` to AutoPlaylist_Session".format(self.song_Count, playlistfile))
 

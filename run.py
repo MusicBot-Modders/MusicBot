@@ -9,6 +9,7 @@ import traceback
 import subprocess
 
 from shutil import disk_usage, rmtree
+from base64 import b64decode
 
 try:
     import pathlib
@@ -199,6 +200,8 @@ def sanity_checks(optional=True):
     # Make our folders if needed
     req_ensure_folders()
 
+    log.info("Required checks passed.")
+
     ## Optional
     if not optional:
         return
@@ -206,7 +209,7 @@ def sanity_checks(optional=True):
     # Check disk usage
     opt_check_disk_space()
 
-    log.info("Checks passed.")
+    log.info("Optional checks passed.")
 
 
 def req_ensure_py3():
@@ -274,10 +277,13 @@ def req_ensure_encoding():
 def req_ensure_env():
     log.info("Ensuring we're in the right environment")
 
+    if os.environ.get('APP_ENV') != 'docker' and not os.path.isdir(b64decode('LmdpdA==').decode('utf-8')):
+        log.critical(b64decode('Qm90IHdhc24ndCBpbnN0YWxsZWQgdXNpbmcgR2l0LiBSZWluc3RhbGwgdXNpbmcgaHR0cDovL2JpdC5seS9tdXNpY2JvdGRvY3Mu').decode('utf-8'))
+        bugger_off()
+
     try:
         assert os.path.isdir('config'), 'folder "config" not found'
         assert os.path.isdir('musicbot'), 'folder "musicbot" not found'
-        assert os.path.isdir('.git'), 'bot was not installed using Git'
         assert os.path.isfile('musicbot/__init__.py'), 'musicbot folder is not a Python module'
 
         assert importlib.util.find_spec('musicbot'), "musicbot module is not importable"
@@ -315,9 +321,6 @@ def pyexec(pycom, *args, pycom2=None):
     pycom2 = pycom2 or pycom
     os.execlp(pycom, pycom2, *args)
 
-def restart(*args):
-    pyexec(sys.executable, *args, *sys.argv, pycom2='python')
-
 
 def main():
     # TODO: *actual* argparsing
@@ -345,7 +348,6 @@ def main():
             m = MusicBot()
 
             sh.terminator = ''
-            log.info("Connecting")
             sh.terminator = '\n'
 
             m.run()
@@ -388,7 +390,8 @@ def main():
                     break
 
                 elif e.__class__.__name__ == "RestartSignal":
-                    restart()
+                    loops = 0
+                    pass
             else:
                 log.exception("Error starting bot")
 

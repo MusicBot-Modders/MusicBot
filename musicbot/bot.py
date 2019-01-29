@@ -740,7 +740,7 @@ class MusicBot(discord.Client):
 
         with open('data/server_names.txt', 'w', encoding='utf8') as f:
             for guilds in sorted(self.guilds, key=lambda s:int(s.id)):
-                f.write('{:<22} {}\n'.format(guild.id, guild.name))
+                f.write('{:<22} {}\n'.format(guilds.id, guilds.name))
 
         if not self.config.save_videos and os.path.isdir(AUDIO_CACHE_PATH):
             if self._delete_old_audiocache():

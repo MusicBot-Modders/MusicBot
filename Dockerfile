@@ -11,13 +11,13 @@ RUN apk update \
   ffmpeg \
   opus \
   python3 \
+  libsodium-dev \
 \
 # Install build dependencies
 && apk add --no-cache --virtual .build-deps \
   gcc \
   git \
   libffi-dev \
-  libsodium-dev \
   make \
   musl-dev \
   python3-dev \
@@ -32,4 +32,6 @@ RUN apk update \
 # Create volume for mapping the config
 VOLUME /usr/src/musicbot/config
 
-ENTRYPOINT ["python3", "run.py"]
+ENV APP_ENV=docker
+
+ENTRYPOINT ["python3", "dockerentry.py"]
